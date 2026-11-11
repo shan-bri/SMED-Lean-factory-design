@@ -1,0 +1,1 @@
+# SMED-Lean-factory-design
