@@ -1,0 +1,963 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Breezeway SMED Workshop</title>
+<style>
+:root{--bg:#f5f6f4;--card:#fff;--ink:#1d2622;--mute:#5d6b64;--line:#dfe3df;--acc:#1f6f5c;--acc2:#e7f2ee;--warn:#b42318;--ok:#157347;--amb:#a15c00;--int:#ea7a1a;--ext:#2563eb}
+*{box-sizing:border-box}
+body{margin:0;font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink)}
+header{background:#163d33;color:#fff;padding:12px 20px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
+header h1{font-size:19px;margin:0;font-weight:650;letter-spacing:.2px}
+header small{opacity:.8;font-weight:400}
+header input{border:0;border-radius:6px;padding:6px 10px;font:inherit;width:190px}
+nav{display:flex;gap:2px;background:#163d33;padding:0 16px;overflow-x:auto}
+nav button{background:none;border:0;color:#cfe4dc;padding:10px 14px;font:inherit;cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap}
+nav button:hover{color:#fff;background:rgba(255,255,255,.08)}
+nav button.on{color:#163d33;background:#e6f4ee;border-bottom-color:#f2b134;font-weight:700;border-radius:6px 6px 0 0}
+main{max-width:1240px;margin:0 auto;padding:18px 16px 40px}
+section{display:none}section.on{display:block}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin-bottom:16px}
+h2{font-size:20px;margin:0 0 8px}h3{font-size:16px;margin:14px 0 6px}
+p{margin:6px 0 10px}.mute{color:var(--mute)}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:middle}
+th{background:#f0f3f1;font-weight:600}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+.grid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:16px}
+@media(max-width:960px){.grid{grid-template-columns:1fr}}
+.row{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:flex-end;margin:6px 0}
+label.f{display:flex;flex-direction:column;font-size:13px;color:var(--mute);gap:3px}
+label.c{display:flex;gap:6px;align-items:center;font-size:14px}
+select,input[type=number]{font:inherit;padding:5px 8px;border:1px solid #c9d0cb;border-radius:6px;background:#fff;color:var(--ink)}
+input[type=number]{width:110px}
+.btn{font:inherit;border:1px solid var(--acc);background:var(--acc);color:#fff;border-radius:7px;padding:7px 14px;cursor:pointer}
+.btn.o{background:#fff;color:var(--acc)}
+.btn.on{background:#f2b134;border-color:#d9951a;color:#1d2a25;font-weight:700;box-shadow:inset 0 2px 4px rgba(0,0,0,.18)}
+.btn:active{transform:translateY(1px)}
+#invTbl tr.sel td{background:#e6f4ee}#invTbl tr.sel td:nth-child(2){font-weight:600}
+.seg button:not(.on):hover{background:#f0f3f1}
+#capMin tr.hit td{background:#fff7e6}
+.btn:disabled{opacity:.5;cursor:default}
+.btn:not(:disabled):hover{filter:brightness(.95)}
+.btn:focus-visible,.seg button:focus-visible{outline:3px solid #7fd1b4;outline-offset:2px}
+.seg{display:inline-flex;border:1px solid #c9d0cb;border-radius:7px;overflow:hidden}
+.seg button{font:inherit;font-size:13px;border:0;background:#fff;color:var(--mute);padding:4px 10px;cursor:pointer}
+.seg button+button{border-left:1px solid #c9d0cb}
+.seg button.on.i{background:var(--int);color:#fff;font-weight:600}
+.seg button.on.e{background:var(--ext);color:#fff;font-weight:600}
+.kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.kpis.k3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.kpi{background:#f6f8f7;border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+.kpi b{display:block;font-size:21px;font-variant-numeric:tabular-nums}
+.kpi span{font-size:12px;color:var(--mute)}
+.kpi b i{font-style:normal;font-size:21px}
+.good{color:var(--ok)}.bad{color:var(--warn)}.amb{color:var(--amb)}
+.pill{display:inline-block;border-radius:999px;padding:1px 9px;font-size:12px;font-weight:600}
+.pill.g{background:#dcf2e5;color:#11613a}.pill.r{background:#fde4e1;color:#9b1c13}.pill.a{background:#fff1d6;color:#7a4600}
+.note{background:#fff8e6;border:1px solid #f1dfa8;border-radius:8px;padding:8px 12px;font-size:14px;margin:8px 0}
+.flag{font-size:12px;display:block;margin-top:2px}
+.cv{width:100%;height:auto;border:1px solid var(--line);border-radius:8px;background:#fbfcfb;display:block}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:12px;color:var(--mute);margin-top:6px}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:4px;vertical-align:-2px}
+.hidden{display:none}
+.stage td:first-child{font-weight:600}
+tr.sel td{background:#f3faf7}
+input[type=range]{width:220px}
+.smedbox{display:flex;gap:10px;align-items:center;background:var(--acc2);border-radius:8px;padding:8px 12px;margin:8px 0;flex-wrap:wrap}
+.smedbox b{font-size:18px}
+footer{color:var(--mute);font-size:12px;text-align:center;padding:10px}
+</style>
+</head>
+<body>
+<header>
+  <h1>Breezeway SMED Workshop <small>· machining and winding cell</small></h1>
+</header>
+<nav id="nav">
+  <button data-t="brief" class="on">1. Brief</button>
+  <button data-t="co">2. Changeover (Task 1)</button>
+  <button data-t="cap">3. Capacity check (Task 2)</button>
+  <button data-t="test">4. Batch test (Task 3)</button>
+  <button data-t="eoq">5. EOQ and EMQ (Task 4)</button>
+  <button data-t="log">6. Results log</button>
+</nav>
+<main>
+
+<!-- ================= BRIEF ================= -->
+<section id="brief" class="on">
+  <div class="card">
+    <h2>The brief</h2>
+    <p><b>Breezeway Fans Ltd</b> (a fictional company) machines and winds the motor housings for its Desk and Tower fans in one cell, inside its domestic focused factory. One worker runs all six machines: they load and unload each machine (30 s per machine), walk 38 s per loop, and do every changeover. Today the cell runs <b>daily batches</b>: 45 Desk, then 30 Tower.</p>
+    <p>The operations manager wants <b>smaller batches</b> to cut stock and lead time, and is worried about a possible <b>+15% order</b> from a retailer. In this workshop you reduce the CNC lathe changeover with SMED, then work out its effect on capacity, batch size, lead time and cost.</p>
+    <div class="grid">
+      <div>
+        <h3>Machines</h3>
+        <table><thead><tr><th>#</th><th>Machine</th><th class="n">Desk (s)</th><th class="n">Tower (s)</th><th class="n">Changeover (s)</th></tr></thead>
+        <tbody id="macTbl"></tbody></table>
+        <p class="mute" style="font-size:13px">Changeover = switching between Desk and Tower. Times include no loading; add 30 s per machine for the worker to unload, load and start it.</p>
+      </div>
+      <div>
+        <h3>Key facts</h3>
+        <ul>
+          <li>Demand 1,500 fans a month = <b>75 a day</b>: 60% Desk, 40% Tower.</li>
+          <li>2 shifts × 7.5 h = <b>54,000 s a day</b>. Takt = <b>720 s</b>.</li>
+          <li>Worker cycle time 218 s (6 × 30 s + 38 s walking).</li>
+          <li>Winder per fan incl. loading: Desk 510 s, Tower 630 s; weighted <b>558 s</b>. The winder sets the pace.</li>
+          <li>Labour £18 per hour; cell running cost £95 per hour.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <h3>How to use this workshop</h3>
+    <table>
+      <tr><th style="width:230px">Tab</th><th>What you do</th></tr>
+      <tr><td>2. Changeover</td><td>Task 1. Classify the 13 steps of the lathe changeover as internal or external, choose improvements, and see the new changeover time, cost and % cut. Then apply your % cut to the whole cell.</td></tr>
+      <tr><td>3. Capacity check</td><td>Task 2. Do the calculation by hand first, then use this tab to check it: can the winder and the worker afford the changeovers for each batch size?</td></tr>
+      <tr><td>4. Batch test</td><td>Task 3. Run 10 days of the cell for a batch size and SMED %, and record cell cycle time, output, lead time and changeover time.</td></tr>
+      <tr><td>5. EOQ and EMQ</td><td>Task 4. Check your EOQ and EMQ before and after SMED, and see the cost curve.</td></tr>
+      <tr><td>6. Results log</td><td>Every saved design and run, ready to download as a CSV file.</td></tr>
+    </table>
+    <p class="mute" style="font-size:13px">Your work is saved in this browser only. Costs and times are teaching values for this exercise, not industry data.</p>
+  </div>
+</section>
+
+<!-- ================= CHANGEOVER ================= -->
+<section id="co">
+  <div class="card">
+    <h2>Task 1: SMED the CNC lathe changeover (Desk → Tower)</h2>
+    <p>The setter was filmed. Today every step is <b>internal</b>: the operator only restarts production after the setter has signed the first-off sheet and returned the Desk tools. Changeover time runs from the last good Desk part to the first good Tower part at full rate.</p>
+    <div class="row">
+      <button class="btn o" id="coCheck">Check my classification</button>
+      <button class="btn o" id="coReset">Reset</button>
+      <span class="mute" id="coCheckMsg" style="font-size:14px"></span>
+    </div>
+  </div>
+  <div class="grid">
+    <div class="card">
+      <h3>Element sheet</h3>
+      <table><thead><tr><th>#</th><th>Element (as filmed)</th><th class="n">Now (s)</th><th>Internal / external</th><th class="n">New (s)</th></tr></thead>
+      <tbody id="elTbl"></tbody></table>
+      <p class="mute" style="font-size:13px">Moving any step outside the stopped time needs the changeover cart, checklist and shadow board.</p>
+    </div>
+    <div>
+      <div class="card">
+        <h3>Investment menu</h3>
+        <table><thead><tr><th></th><th>Option</th><th class="n">Cost</th><th class="n">Saves (s)</th><th class="n">£ per s</th></tr></thead>
+        <tbody id="invTbl"></tbody></table>
+      </div>
+      <div class="card">
+        <h3>Your changeover</h3>
+        <div class="kpis">
+          <div class="kpi"><b id="kInt">900 s</b><span>internal: machine stopped</span></div>
+          <div class="kpi"><b id="kCut">0%</b><span>cut from 900 s</span></div>
+          <div class="kpi"><b id="kExt">0 s</b><span>external: done while it runs</span></div>
+          <div class="kpi"><b id="kCost">£0</b><span>investment</span></div>
+        </div>
+        <table class="stage" style="margin-top:10px"><tbody id="stageTbl"></tbody></table>
+        <div class="smedbox"><span>Use your cut for the whole cell:</span><b id="kCut2">0%</b><button class="btn" id="coApply">Apply to tabs 3–5</button></div>
+        <div class="row"><button class="btn o" id="coSave">Save this design to the log</button><span id="coSaved" class="mute" style="font-size:13px"></span></div>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <h3>Timeline</h3>
+    <canvas id="tl" class="cv" width="1180" height="230"></canvas>
+    <div class="legend"><span><i style="background:var(--int)"></i>internal (machine stopped)</span><span><i style="background:var(--ext)"></i>external (machine running)</span></div>
+  </div>
+</section>
+
+<!-- ================= CAPACITY ================= -->
+<section id="cap">
+  <div class="card">
+    <h2>Task 2: can the cell afford the changeovers?</h2>
+    <p>For each resource the changeovers load: <b>N × S × (1 − SMED) + D × p ≤ T</b>. N = model switches per day, S = changeover time per switch, D × p = production time per day, T = 54,000 s. The SMED % applies to every machine in the cell.</p>
+    <div class="row">
+      <label class="f">SMED cut across the cell (%)<input type="number" id="capSmed" min="0" max="95" step="1" value="0"></label>
+      <label class="c"><input type="checkbox" id="capR2"> Round 2: +15% demand and winder breakdowns</label>
+      <button class="btn" id="capShow">Show the check</button>
+    </div>
+    <div class="note">Work it out by hand on your worksheet first, then press <b>Show the check</b>.</div>
+  </div>
+  <div class="card hidden" id="capOut">
+    <table><thead><tr><th>Resource</th><th class="n">Spare time per day (s)</th><th>Batch of one<br><span class="mute">N = <span class="nN" data-k="1"></span> switches a day, 1 Desk / 1 Tower</span></th><th>Small batches<br><span class="mute">N = <span class="nN" data-k="5"></span> switches a day, 15 Desk / 10 Tower</span></th><th>Daily batches<br><span class="mute">N = <span class="nN" data-k="15"></span> switches a day, 45 Desk / 30 Tower</span></th></tr></thead>
+    <tbody id="capTbl"></tbody></table>
+    <p class="mute" style="font-size:13px">N is the number of model switches (changeovers) a day, not the batch size. Smaller batches mean more switches.</p>
+    <h3>Smallest SMED cut each product mix needs</h3>
+    <p class="mute" style="font-size:13px">These minimums are fixed targets: they depend on the switches per day and the spare time, not on your cut. The last column compares your cut with them.</p>
+    <table><thead><tr><th>Product mix</th><th class="n">Winder needs</th><th class="n">Worker needs</th><th>Which sets the limit?</th><th id="capYourH">Your cut</th></tr></thead><tbody id="capMin"></tbody></table>
+    <p class="mute" style="font-size:13px" id="capNote"></p>
+  </div>
+</section>
+
+<!-- ================= BATCH TEST ================= -->
+<section id="test">
+  <div class="card">
+    <h2>Task 3: test it</h2>
+    <p>Runs 10 working days of the machining cell with one worker and sequential changeover (each machine is changed over as the first part of the new model reaches it). Results are measured over days 2–10.</p>
+    <div class="row">
+      <label class="f">Product mix<select id="tMix"><option value="15">Daily batches (2 switches a day: 45 Desk / 30 Tower)</option><option value="5">Small batches (6 switches a day: 15 Desk / 10 Tower)</option><option value="1">Batch of one (60 switches a day: D T D T …)</option></select></label>
+      <label class="f">SMED cut across the cell (%)<input type="number" id="tSmed" min="0" max="95" step="1" value="0"></label>
+      <label class="f">Release<select id="tRel"><option value="batch">Whole batch at once</option><option value="takt">One fan every takt</option></select></label>
+      <button class="btn" id="tRun">Run 10 days</button>
+    </div>
+    <details><summary>Extension</summary>
+      <div class="row"><label class="c"><input type="checkbox" id="tR2"> Round 2: +15% demand, ±15% task times, winder breakdowns (random)</label>
+      <label class="c"><input type="checkbox" id="tW2"> Second winder (£45,000)</label></div>
+    </details>
+  </div>
+  <div class="grid">
+    <div class="card">
+      <h3 id="tHead">Results</h3>
+      <div class="kpis k3">
+        <div class="kpi"><b id="rCT">–</b><span>measured cell CT (s), takt <span id="rTakt">720</span></span></div>
+        <div class="kpi"><b id="rOut">–</b><span>fans per day</span></div>
+        <div class="kpi"><b id="rLead">–</b><span>average lead time (min)</span></div>
+        <div class="kpi"><b id="rWip">–</b><span>total WIP (Little’s law)</span></div>
+        <div class="kpi"><b id="rCo">–</b><span>changeover min per day</span></div>
+        <div class="kpi"><b id="rQ">–</b><span>fans still waiting at the end</span></div>
+      </div>
+      <p id="rVerdict" style="margin-top:10px"></p>
+      <p class="mute" style="font-size:13px">Measured cell CT comes from a second run with unlimited work: the fastest the cell can go. Lead time runs from release to finish. Total WIP = fans per day ÷ 900 min × lead time.</p>
+    </div>
+    <div class="card">
+      <h3>This session’s runs</h3>
+      <table><thead><tr><th>Mix</th><th class="n">SMED</th><th>Release</th><th class="n">CT</th><th class="n">Fans/day</th><th class="n">Lead</th><th class="n">WIP</th></tr></thead><tbody id="tHist"></tbody></table>
+    </div>
+  </div>
+</section>
+
+<!-- ================= EOQ ================= -->
+<section id="eoq">
+  <div class="card">
+    <h2>Task 4: EOQ versus lean (Tower housings)</h2>
+    <div class="row">
+      <label class="f">SMED cut (%)<input type="number" id="eSmed" min="0" max="95" step="1" value="0"></label>
+      <label class="f">Annual demand D<input type="number" id="eD" value="7200"></label>
+      <label class="f">Changeover per switch (s)<input type="number" id="eCo" value="2700"></label>
+      <label class="f">Labour cost per hour (£)<input type="number" id="eRate" value="18"></label>
+      <label class="f">Holding cost H, assumed (£/unit/year)<input type="number" id="eH" value="15" step="0.5"></label>
+      <label class="f">Production rate p (per day)<input type="number" id="eP" value="85.7" step="0.1"></label>
+      <label class="f">Usage d (per day)<input type="number" id="eDd" value="30"></label>
+    </div>
+    <p class="mute" style="font-size:13px">S = changeover time × labour cost per hour (£18). The cell running cost is left out because it is paid whether or not the cell changes over. H = £60 × 25% a year is an assumption: try your own values. The winder limits Tower output to 54,000 ÷ 630 = 85.7 a day while the cell runs Tower.</p>
+    <div class="row"><button class="btn" id="eShow">Show the check</button></div>
+    <div class="note">Calculate EOQ, EMQ and the annual costs by hand first, then press <b>Show the check</b>.</div>
+  </div>
+  <div class="grid hidden" id="eOut">
+    <div class="card">
+      <table><thead><tr><th></th><th class="n">Before SMED</th><th class="n" id="eAfterH">After SMED</th></tr></thead><tbody id="eTbl"></tbody></table>
+      <p class="mute" style="font-size:13px">Annual cost = (D ÷ Q) × S + (Q ÷ 2) × H. EOQ = √(2DS ÷ H). EMQ = √(2DS ÷ H(1 − d/p)).</p>
+    </div>
+    <div class="card">
+      <h3>Annual changeover + holding cost against batch size</h3>
+      <canvas id="eCv" class="cv" width="560" height="320"></canvas>
+      <div class="legend"><span><i style="background:#7a8a83"></i>before SMED</span><span><i style="background:var(--acc)"></i>after SMED</span><span><i style="background:var(--int)"></i>today’s batch, 30</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= LOG ================= -->
+<section id="log">
+  <div class="card">
+    <h2>Results log</h2>
+    <div class="row"><button class="btn" id="lDl">Download CSV</button><button class="btn o" id="lClr">Clear the log</button></div>
+    <table style="margin-top:10px"><thead><tr><th>Time</th><th>Type</th><th>Settings</th><th>Results</th></tr></thead><tbody id="lTbl"></tbody></table>
+  </div>
+</section>
+</main>
+<footer>Breezeway SMED Workshop · Lean Factory Design</footer>
+
+<script>'use strict';
+'use strict';
+// ---------- Breezeway Fans: workcell engine (time step = 1 s) ----------
+const DAY = 54000;            // 2 shifts x 7.5 h, in seconds
+const DAYS = 10;              // simulated working days (two weeks)
+const PITCH = 2;              // metres between neighbouring stations
+const PICK = 2;               // seconds to pick up / put down per move
+const MIX = { D: 0.6, T: 0.4 };
+const MODEL_NAME = { D: 'Desk', T: 'Tower' };
+const MTBF = 21600, MTTR = 2400; // winder: 6 h running between failures, 40 min mean repair
+
+const DEF = {
+  asm: {
+    key: 'asm', name: 'Assembly & test cell', short: 'Assembly', type: 'manual', opCost: 30,
+    stations: [
+      { n: 'Fit motor', t: { D: 150, T: 180 }, c: 0 },
+      { n: 'Wiring', t: { D: 180, T: 220 }, c: 0 },
+      { n: 'Fit blades', t: { D: 120, T: 160 }, c: 90 },
+      { n: 'Guard & grille', t: { D: 150, T: 200 }, c: 60 },
+      { n: 'Controls', t: { D: 120, T: 170 }, c: 0 },
+      { n: 'Fasten & torque', t: { D: 120, T: 150 }, c: 0 },
+      { n: 'Run & safety test', t: { D: 360, T: 420 }, c: 120 },
+      { n: 'Pack & label', t: { D: 180, T: 240 }, c: 60 }
+    ]
+  },
+  mac: {
+    key: 'mac', name: 'Machining & winding cell', short: 'Machining', type: 'auto', opCost: 95, load: 30,
+    stations: [
+      { n: 'CNC lathe', t: { D: 300, T: 360 }, c: 900 },
+      { n: 'CNC mill', t: { D: 300, T: 360 }, c: 900 },
+      { n: 'Drill & tap', t: { D: 120, T: 150 }, c: 300 },
+      { n: 'Wash', t: { D: 60, T: 80 }, c: 0 },
+      { n: 'Motor winder', t: { D: 480, T: 600 }, c: 480, wind: true },
+      { n: 'Electrical check', t: { D: 90, T: 100 }, c: 120 }
+    ]
+  }
+};
+
+function layout(N) {
+  const L = N === 8 ? 3 : 2, Tp = 2, R = L;
+  const W = (Tp + 1) * PITCH, H = (L + 1) * PITCH, S = [];
+  for (let i = 0; i < L; i++) S.push({ x: 0, y: (i + 1) * PITCH });
+  for (let i = 0; i < Tp; i++) S.push({ x: (i + 1) * PITCH, y: H });
+  for (let i = 0; i < R; i++) S.push({ x: W, y: (L - i) * PITCH });
+  return { S, in: { x: 0, y: 0 }, out: { x: W, y: 0 }, W, H };
+}
+function P(L, p) { return p === 'in' ? L.in : p === 'out' ? L.out : L.S[p]; }
+function walkT(L, a, b) {
+  if (a === b) return 0;
+  const A = P(L, a), B = P(L, b);
+  return Math.round(Math.hypot(A.x - B.x, A.y - B.y) + PICK);
+}
+function runsOf(list) {
+  const r = [];
+  for (const s of list) {
+    if (r.length && r[r.length - 1][1] === s - 1) r[r.length - 1][1] = s; else r.push([s, s]);
+  }
+  return r;
+}
+function stationsOf(design, w) {
+  const o = [];
+  design.assign.forEach((a, i) => { if (a === w) o.push(i); });
+  return o;
+}
+function blocksFor(def, design, w) {
+  if (design.scheme === 'rabbit') return [[0, def.stations.length - 1]];
+  return runsOf(stationsOf(design, w));
+}
+function buildPlan(def, design, w) {
+  const N = def.stations.length, acts = [];
+  for (const [a, b] of blocksFor(def, design, w)) {
+    if (a === 0) acts.push({ k: 'go', p: 'in' }, { k: 'pick', from: -1 });
+    else acts.push({ k: 'go', p: a }, { k: 'pick', from: a - 1 });
+    for (let s = a; s <= b; s++) acts.push({ k: 'go', p: s }, { k: 'op', s });
+    if (b === N - 1) acts.push({ k: 'go', p: 'out' }, { k: 'put', to: -2 });
+    else acts.push({ k: 'put', to: b });
+  }
+  return acts;
+}
+function slotsOf(def, design, s) { return (def.type === 'auto' && s.wind && design.secondWinder) ? 2 : 1; }
+
+// ---------- lecture formulas ----------
+function theory(def, design) {
+  const auto = def.type === 'auto', L = layout(def.stations.length);
+  const tt = (s, m) => m === 'W' ? MIX.D * s.t.D + MIX.T * s.t.T : s.t[m];
+  const per = m => {
+    const nLoops = design.scheme === 'rabbit' ? 1 : design.n, rows = [];
+    for (let w = 0; w < nLoops; w++) {
+      const plan = buildPlan(def, design, w);
+      if (!plan.length) { rows.push({ w, empty: true }); continue; }
+      const pts = plan.filter(a => a.k === 'go').map(a => a.p);
+      let walk = 0;
+      for (let i = 0; i < pts.length; i++) walk += walkT(L, pts[i], pts[(i + 1) % pts.length]);
+      const st = plan.filter(a => a.k === 'op').map(a => a.s);
+      let task = 0, mct = 0, maxSt = 0;
+      for (const i of st) {
+        const s = def.stations[i];
+        if (auto) { task += def.load; mct = Math.max(mct, (tt(s, m) + def.load) / slotsOf(def, design, s)); }
+        else { task += tt(s, m); maxSt = Math.max(maxSt, tt(s, m)); }
+      }
+      const wct = task + walk;
+      rows.push({ w, st, task, walk, wct, mct, maxSt, sub: auto ? Math.max(wct, mct) : wct });
+    }
+    let cell;
+    if (design.scheme === 'rabbit') {
+      const r = rows[0];
+      cell = Math.max(r.wct / design.n, auto ? r.mct : r.maxSt);
+      return { rows, cell, rabbit: true, share: r.wct / design.n, floor: auto ? r.mct : r.maxSt };
+    }
+    cell = Math.max(...rows.filter(r => !r.empty).map(r => r.sub));
+    return { rows, cell };
+  };
+  return { D: per('D'), T: per('T'), W: per('W') };
+}
+
+function bestSplit(def, n, extra) {
+  const N = def.stations.length;
+  let best = null;
+  const rec = (start, k, cuts) => {
+    if (k === n - 1) {
+      const assign = [];
+      let w = 0, c = [...cuts, N];
+      for (let i = 0; i < N; i++) { while (i >= c[w]) w++; assign.push(w); }
+      const d = Object.assign({ n, scheme: 'sub', assign, buf: 1 }, extra || {});
+      const th = theory(def, d).W.cell;
+      if (!best || th < best.ct) best = { ct: th, assign };
+      return;
+    }
+    for (let c = start + 1; c <= N - (n - 1 - k); c++) rec(c, k + 1, [...cuts, c]);
+  };
+  if (n === 1) return { ct: theory(def, Object.assign({ n: 1, scheme: 'sub', assign: Array(N).fill(0), buf: 1 }, extra || {})).W.cell, assign: Array(N).fill(0) };
+  rec(0, 0, []);
+  return best;
+}
+
+// ---------- random ----------
+function sampleF(cv) {
+  if (!cv) return 1;
+  const s = Math.sqrt(Math.log(1 + cv * cv));
+  let u = 0; while (!u) u = Math.random();
+  const z = Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * Math.random());
+  return Math.exp(-s * s / 2 + s * z);
+}
+
+function makeSeq(k) {
+  if (k === 1) { const p = ['D', 'T', 'D', 'T', 'D']; return { m: i => p[i % 5], start: i => i }; }
+  const per = 5 * k;
+  return {
+    m: i => (i % per) < 3 * k ? 'D' : 'T',
+    start: i => { const r = i % per; return r < 3 * k ? i - r : i - (r - 3 * k); }
+  };
+}
+
+// ---------- a workcell ----------
+class Cell {
+  constructor(sim, key, design) {
+    this.sim = sim; this.key = key; this.design = design;
+    this.smed = design.smed !== undefined ? design.smed : (sim.opts.smed || 0);
+    const def = this.def = DEF[key];
+    this.N = def.stations.length; this.L = layout(this.N); this.auto = def.type === 'auto';
+    const m0 = sim.firstModel;
+    this.st = def.stations.map((s, i) => ({
+      def: s, i, lock: null, setup: m0, busyT: 0,
+      slots: Array.from({ length: slotsOf(def, design, s) }, () => ({ part: null, done: 0, start: 0, setup: m0, down: 0, runT: 0, downT: 0 }))
+    }));
+    this.buf = Array.from({ length: this.N - 1 }, () => []);
+    this.cap = design.buf || 1;
+    this.input = []; this.wip = 0; this.model = m0; this.coUntil = 0;
+    this.coCount = 0; this.coTime = 0; this.out = 0; this.outWin = 0; this.breaks = 0;
+    this.workers = [];
+    for (let w = 0; w < design.n; w++) {
+      const plan = buildPlan(def, design, design.scheme === 'rabbit' ? 0 : w);
+      this.workers.push({ id: w, plan, a: 0, st: 'idle', until: 0, pos: 'in', from: 'in', to: 'in', t0: 0,
+        carry: null, next: null, slot: -1, vis: 'idle', multi: plan.filter(x => x.k === 'pick').length > 1, stats: { busy: 0, walk: 0, wait: 0, co: 0, idle: 0 } });
+    }
+    this.downstream = null; this.source = null;
+  }
+  peek() { if (!this.input.length && this.source) this.input.push(this.source()); return this.input[0]; }
+  step(t) {
+    const win = t >= this.sim.winStart, o = this.sim.opts;
+    if (this.auto) for (const S of this.st) for (const sl of S.slots) {
+      if (sl.part && t < sl.done) {
+        if (sl.down > t) { if (win) sl.downT++; }
+        else {
+          if (win) sl.runT++;
+          if (S.def.wind && o.breakdown && Math.random() < 1 / MTBF) {
+            const r = Math.max(60, Math.round(-Math.log(1 - Math.random()) * MTTR));
+            sl.down = t + r; sl.done += r; this.breaks++;
+          }
+        }
+      }
+    }
+    for (const w of this.workers) this.stepW(w, t, win);
+  }
+  stepW(w, t, win) {
+    const S = w.stats;
+    if (t < this.coUntil) {
+      if (w.until > t) { w.until++; w.t0++; }
+      if (win) S.co++; w.vis = 'co'; return;
+    }
+    if (!w.plan.length) { if (win) S.idle++; w.vis = 'idle'; return; }
+    for (let g = 0; g < 40; g++) {
+      if (w.st === 'walk' || w.st === 'op' || w.st === 'co') {
+        if (t < w.until) { if (win) S[w.st === 'op' ? 'busy' : w.st]++; w.vis = w.st; return; }
+        this.finish(w, t);
+        continue;
+      }
+      const r = this.act(w, t);
+      if (r === 'wait') { if (win) S.wait++; w.vis = 'wait'; return; }
+      if (r === 'co*') { if (win) S.co++; w.vis = 'co'; return; }
+      if (r === 'go') continue;
+      w.a = (w.a + 1) % w.plan.length;
+    }
+    if (win) S.walk++;
+  }
+  finish(w, t) {
+    const st = w.st, a = w.plan[w.a];
+    w.st = 'idle';
+    if (st === 'walk') { w.pos = w.to; w.a = (w.a + 1) % w.plan.length; return; }
+    if (st === 'co') return;               // same action again: now do the operation
+    const S = this.st[a.s];
+    if (this.auto) {
+      const sl = S.slots[w.slot];
+      sl.part = w.carry; sl.start = t;
+      sl.done = t + Math.max(1, Math.round(S.def.t[w.carry.m] * sampleF(this.sim.opts.cv * 0.2)));
+      w.carry = w.next; w.next = null; w.slot = -1;
+    }
+    S.lock = null;
+    w.a = (w.a + 1) % w.plan.length;
+  }
+  act(w, t) {
+    const a = w.plan[w.a], sim = this.sim, o = sim.opts;
+    if (a.k === 'go') {
+      if (w.pos === a.p) return 'next';
+      const d = walkT(this.L, w.pos, a.p);
+      w.st = 'walk'; w.from = w.pos; w.to = a.p; w.t0 = t;
+      w.until = t + Math.max(1, Math.round(d * (o.cv ? sampleF(o.cv * 0.5) : 1)));
+      return 'go';
+    }
+    if (a.k === 'pick') {
+      if (w.carry) return 'next';
+      if (a.from === -1) {
+        if (this.gate && !this.gate()) return (this.auto && this.wip > 0) ? 'next' : 'wait';
+        const u = this.peek();
+        if (!u) return (this.auto && this.wip > 0 && sim.opts.release === 'batch') ? 'next' : 'wait';  // whole batch released: unload finished parts
+        if (o.coMode === 'all' && u.m !== this.model) {
+          if (this.wip > 0) return 'next';      // flush the cell first: go round without a new part
+          let tot = 0;
+          for (const S of this.st) for (const sl of S.slots) tot += S.def.c;
+          tot *= (1 - this.smed);
+          const nAct = this.workers.filter(x => x.plan.length).length || 1;
+          const dur = Math.max(1, Math.round(tot / nAct));
+          for (const S of this.st) { S.setup = u.m; for (const sl of S.slots) sl.setup = u.m; }
+          this.model = u.m; this.coUntil = t + dur; this.coCount++; this.coTime += dur * nAct;
+          return 'co*';
+        }
+        this.input.shift(); w.carry = u; this.wip++; this.model = u.m; this.started = (this.started || 0) + 1;
+        if (u.start === undefined) u.start = t;
+        if (this.onStart) this.onStart(u, t);
+        return 'next';
+      }
+      const b = this.buf[a.from];
+      if (!b.length) return w.multi ? 'next' : 'wait';   // more than one block: carry on round the loop
+      w.carry = b.shift(); return 'next';
+    }
+    if (a.k === 'put') {
+      if (!w.carry) return 'next';
+      if (a.to === -2) {
+        if (this.downstream) { if (!this.downstream(w.carry, t)) return 'wait'; }
+        else sim.finishUnit(w.carry, t);
+        this.wip--; this.out++; if (t >= sim.winStart) this.outWin++;
+        w.carry = null; return 'next';
+      }
+      const b = this.buf[a.to];
+      if (b.length >= this.cap) return 'wait';
+      b.push(w.carry); w.carry = null; return 'next';
+    }
+    // operation
+    const S = this.st[a.s];
+    if (this.auto) return this.opAuto(w, S, t);
+    if (!w.carry) return 'next';
+    if (S.lock && S.lock !== w) return 'wait';
+    S.lock = w;
+    const u = w.carry;
+    if (S.setup !== u.m) {
+      const c = Math.round(S.def.c * (1 - this.smed));
+      S.setup = u.m;
+      if (c > 0 && o.coMode === 'seq') { w.st = 'co'; w.until = t + c; this.coCount++; this.coTime += c; return 'go'; }
+    }
+    w.st = 'op'; w.until = t + Math.max(1, Math.round(S.def.t[u.m] * sampleF(o.cv)));
+    return 'go';
+  }
+  opAuto(w, S, t) {
+    const o = this.sim.opts;
+    if (S.lock && S.lock !== w) return 'wait';
+    const fin = sl => sl.part && t >= sl.done;
+    if (w.carry) {
+      S.lock = w;
+      let k = w.slot;
+      if (k < 0) {
+        k = S.slots.findIndex(fin);
+        if (k < 0) k = S.slots.findIndex(sl => !sl.part);
+        if (k < 0) return 'wait';
+        w.slot = k;
+      }
+      const sl = S.slots[k];
+      if (sl.part) { if (!fin(sl)) return 'wait'; w.next = sl.part; sl.part = null; }
+      if (sl.setup !== w.carry.m) {
+        const c = Math.round(S.def.c * (1 - this.smed));
+        sl.setup = w.carry.m; S.setup = w.carry.m;
+        if (c > 0 && o.coMode === 'seq') { w.st = 'co'; w.until = t + c; this.coCount++; this.coTime += c; return 'go'; }
+      }
+      w.st = 'op'; w.until = t + Math.max(1, Math.round(this.def.load * sampleF(o.cv)));
+      return 'go';
+    }
+    const k = S.slots.findIndex(fin);
+    if (k >= 0) { w.carry = S.slots[k].part; S.slots[k].part = null; return 'next'; }
+    if (S.slots.some(sl => sl.part)) { return 'wait'; }
+    return 'next';
+  }
+}
+
+// ---------- simulation ----------
+class Sim {
+  constructor(opts) {
+    this.opts = Object.assign({ k: 15, coMode: 'seq', smed: 0, cv: 0, breakdown: false, demandUp: false,
+      capTest: false, release: 'takt', kanban: 5, days: DAYS }, opts);
+    const o = this.opts;
+    this.t = 0; this.end = o.days * DAY; this.winStart = DAY;
+    this.demandMonth = 1500 * (o.demandUp ? 1.15 : 1);
+    this.takt = DAY * 20 / this.demandMonth; this.perDay = DAY / this.takt;
+    this.seq = makeSeq(o.k); this.firstModel = this.seq.m(0);
+    this.units = []; this.nextIdx = 0; this.done = [];
+    this.cells = {};
+    if (o.mode !== 'asm') this.cells.mac = new Cell(this, 'mac', o.designs.mac);
+    if (o.mode !== 'mac') this.cells.asm = new Cell(this, 'asm', o.designs.asm);
+    this.first = o.mode === 'asm' ? this.cells.asm : this.cells.mac;
+    this.last = o.mode === 'mac' ? this.cells.mac : this.cells.asm;
+    this.orders = 0; this.orderT = [];
+    if (o.mode === 'linked') {
+      // single-card kanban loop: orders arrive at assembly; assembly pulls a housing from the rack,
+      // which frees its card; a free card authorises machining to start the next housing.
+      const mac = this.cells.mac, asm = this.cells.asm;
+      this.kb = asm.input;
+      mac.source = () => this.newUnit(undefined);
+      mac.gate = () => mac.wip + this.kb.length < o.kanban;
+      mac.downstream = (u) => { this.kb.push(u); return true; };
+      asm.gate = () => this.kb.length > 0 && this.kb[0].id < this.orders;
+      asm.onStart = (u) => { u.rel = this.orderT[u.id]; };
+    }
+    if (o.capTest) this.first.source = () => this.newUnit(this.t);
+    this.wipSum = 0; this.wipN = 0; this.cellWipSum = 0; this.stuck = 0; this.deadlock = false;
+  }
+  newUnit(rel) { const i = this.nextIdx++; const u = { id: i, m: this.seq.m(i), rel }; this.units.push(u); return u; }
+  relTime(i) { return (this.opts.release === 'batch' ? this.seq.start(i) : i) * this.takt; }
+  finishUnit(u, t) { u.out = t; this.done.push(u); }
+  step() {
+    const t = this.t;
+    if (this.kb) {
+      let r = this.relTime(this.orders);
+      while (r <= t && r < this.end) { this.orderT.push(r); this.orders++; r = this.relTime(this.orders); }
+    } else if (!this.opts.capTest) {
+      let r = this.relTime(this.nextIdx);
+      while (r <= t && r < this.end) { this.first.input.push(this.newUnit(r)); r = this.relTime(this.nextIdx); }
+    }
+    const before = this.done.length + (this.kb ? this.cells.mac.out : 0);
+    for (const k of ['mac', 'asm']) if (this.cells[k]) this.cells[k].step(t);
+    if (t >= this.winStart && t % 60 === 0) {
+      this.wipN++;
+      this.wipSum += this.units.length - this.done.length;
+      let cw = 0; for (const k in this.cells) cw += this.cells[k].wip; if (this.kb) cw += this.kb.length;
+      this.cellWipSum += cw;
+    }
+    // deadlock guard: nobody able to move for 3 hours while work is waiting
+    const all = Object.values(this.cells).flatMap(c => c.workers.filter(w => w.plan.length));
+    const after = this.done.length + (this.kb ? this.cells.mac.out : 0);
+    const running = Object.values(this.cells).some(c => c.st.some(S => S.slots.some(sl => sl.part && sl.done > t)));
+    if (after === before && all.length && !running && all.every(w => w.vis === 'wait') && (this.kb ? this.orders > this.done.length : this.units.length > this.done.length)) {
+      if (++this.stuck > 10800) { this.deadlock = true; this.t = this.end; return; }
+    } else this.stuck = 0;
+    this.t++;
+  }
+  runAll() { while (this.t < this.end) this.step(); return this.results(); }
+  results() {
+    const w = this.winStart, days = (this.end - w) / DAY;
+    const outDay = this.last.outWin / days;
+    const leads = this.done.filter(u => u.rel >= w).map(u => (u.out - u.rel) / 60).sort((a, b) => a - b);
+    const mean = leads.length ? leads.reduce((a, b) => a + b, 0) / leads.length : NaN;
+    const p90 = leads.length ? leads[Math.floor(0.9 * (leads.length - 1))] : NaN;
+    const cells = {};
+    for (const k in this.cells) {
+      const c = this.cells[k], tot = { busy: 0, walk: 0, wait: 0, co: 0, idle: 0 };
+      const ws = c.workers.map(x => { for (const q in tot) tot[q] += x.stats[q]; return Object.assign({}, x.stats); });
+      const mach = c.auto ? c.st.map(S => ({ n: S.def.n, run: S.slots.reduce((a, s) => a + s.runT, 0) / (S.slots.length * (this.end - w)),
+        down: S.slots.reduce((a, s) => a + s.downT, 0) / (S.slots.length * (this.end - w)) })) : null;
+      cells[k] = { workers: c.workers.length, ws, tot, mach, coCount: c.coCount, coTime: c.coTime, outDay: c.outWin / days,
+        ct: c.outWin ? (this.end - w) / c.outWin : Infinity, breaks: c.breaks };
+    }
+    return {
+      outDay, perDay: this.perDay, takt: this.takt, leadMean: mean, leadP90: p90,
+      backlog: this.kb ? this.orders - this.done.length : this.units.length - this.done.length,
+      queue: this.kb ? this.orders - (this.cells.asm.started || 0) : this.first.input.length,
+      rack: this.kb ? this.kb.length : 0,
+      wip: this.wipN ? this.wipSum / this.wipN : 0, cellWip: this.wipN ? this.cellWipSum / this.wipN : 0,
+      cells, deadlock: this.deadlock, days
+    };
+  }
+}
+if (typeof module !== 'undefined') module.exports = { DEF, DAY, MIX, Sim, theory, bestSplit, layout, walkT, makeSeq };
+
+</script>
+<script>'use strict';
+// ---------------- data ----------------
+const MACH = [['CNC lathe',300,360,900],['CNC mill',300,360,900],['Drill & tap',120,150,300],['Wash',60,80,0],['Motor winder',480,600,480],['Electrical check',90,100,120]];
+const EL = [
+  {n:1,t:'Wait for setter to arrive after last Desk part',s:30,ext:true},
+  {n:2,t:'Walk to tool store; collect Tower jaws, boring bar, insert',s:90,ext:true},
+  {n:3,t:'Find Tower set-up sheet and drawing',s:45,ext:true},
+  {n:4,t:'Remove last Desk part; clean chips from chuck and turret',s:45,ext:false},
+  {n:5,t:'Unbolt Desk soft jaws (6 bolts)',s:60,ext:false},
+  {n:6,t:'Fit Tower soft jaws; tighten 6 bolts',s:75,ext:false},
+  {n:7,t:'Change boring bar and insert; touch off tools, set offsets',s:120,ext:false},
+  {n:8,t:'Find Tower program in the controller and load it',s:45,ext:false},
+  {n:9,t:'Skim-bore jaws to Tower diameter',s:90,ext:false},
+  {n:10,t:'Machine first-off part; walk to QA, wait for CMM, measure',s:120,ext:false},
+  {n:11,t:'Adjust offsets; machine 2nd part; re-measure at machine',s:90,ext:false},
+  {n:12,t:'Sign first-off sheet',s:30,ext:true,reg:true},
+  {n:13,t:'Return Desk jaws and tools to store',s:60,ext:true}];
+const INV = [
+  {id:'cart',t:'Changeover cart, checklist and shadow board',c:600,stage:1,fx:{},tip:'Everything prepared and returned while the machine runs'},
+  {id:'pre',t:'Tool presetter (shared by lathe and mill)',c:12000,stage:2,fx:{7:90,11:60},tip:'Tools pre-set off-line; offsets loaded, not measured; less adjustment'},
+  {id:'jaw',t:'Second jaw set, pre-bored for Tower',c:800,stage:2,fx:{9:90},tip:'No skim-boring on the machine'},
+  {id:'bar',t:'Program call by barcode',c:1500,stage:2,fx:{8:35},tip:'Right program loaded in seconds'},
+  {id:'qcj',t:'Quick-change jaw system',c:3500,stage:3,fx:{5:35,6:40},tip:'2 captive bolts instead of 6'},
+  {id:'gau',t:'Go/no-go gauges in the cell',c:2500,stage:3,fx:{10:80},tip:'Setter checks the first part at the machine'},
+  {id:'chip',t:'Chip guard and air line at the lathe',c:200,stage:3,fx:{4:15},tip:'Faster cleaning'}];
+const STAGE_OF = {7:2,8:2,9:2,4:3,5:3,6:3,10:3,11:3};   // which SMED stage an element's saving belongs to
+const MIXN = {1:60,5:6,15:2};                            // model switches per day at 75 fans
+const MIXNAME = {1:'Batch of one',5:'Small batches',15:'Daily batches'};
+
+// ---------------- state ----------------
+const store = {get(k,d){try{const v=localStorage.getItem('smedws_'+k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem('smedws_'+k,JSON.stringify(v))}catch(e){}}};
+let st = store.get('state', {ext:{}, inv:{}, smed:0, checked:false});
+let LOG = store.get('log', []);
+const save = () => store.set('state', st);
+const $ = id => document.getElementById(id);
+const fmt = (x, d=0) => Number(x).toLocaleString('en-GB', {minimumFractionDigits:d, maximumFractionDigits:d});
+
+// ---------------- tabs ----------------
+document.querySelectorAll('#nav button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#nav button').forEach(x => x.classList.toggle('on', x === b));
+  document.querySelectorAll('main section').forEach(s => s.classList.toggle('on', s.id === b.dataset.t));
+  if (b.dataset.t === 'co') drawTL();
+  if (b.dataset.t === 'eoq' && !$('eOut').classList.contains('hidden')) renderEOQ();
+  if (b.dataset.t === 'log') renderLog();
+}));
+
+// ---------------- brief ----------------
+$('macTbl').innerHTML = MACH.map((m,i) => `<tr><td>${i+1}</td><td>${m[0]}</td><td class="n">${m[1]}</td><td class="n">${m[2]}</td><td class="n">${m[3] ? fmt(m[3]) : '–'}</td></tr>`).join('') +
+  `<tr><td></td><td><b>Total per model switch</b></td><td></td><td></td><td class="n"><b>2,700</b></td></tr>`;
+
+// ---------------- changeover model ----------------
+function calc() {
+  const cart = !!st.inv.cart;
+  const isExt = e => !!st.ext[e.n] && cart;
+  const red = {};                       // seconds saved per element, by stage
+  INV.forEach(v => { if (st.inv[v.id]) for (const k in v.fx) red[k] = (red[k] || 0) + v.fx[k]; });
+  const newT = e => Math.max(0, e.s - (red[e.n] || 0));
+  let intNow = 0, extNow = 0;
+  EL.forEach(e => { if (isExt(e)) extNow += newT(e); else intNow += newT(e); });
+  // stage table: after separating, after converting, after streamlining
+  const after = lvl => EL.reduce((a, e) => {
+    if (isExt(e)) return a;
+    let r = 0; INV.forEach(v => { if (st.inv[v.id] && v.fx[e.n]) { const sg = (v.id === 'pre' && e.n === 11) ? 3 : v.stage; if (sg <= lvl) r += v.fx[e.n]; } });
+    return a + Math.max(0, e.s - r);
+  }, 0);
+  const cost = INV.reduce((a, v) => a + (st.inv[v.id] ? v.c : 0), 0);
+  const cut = (900 - intNow) / 900;
+  return {cart, isExt, newT, intNow, extNow, cost, cut, s1: after(1), s2: after(2), s3: after(3)};
+}
+
+function renderCO() {
+  const R = calc();
+  $('elTbl').innerHTML = EL.map(e => {
+    const ext = !!st.ext[e.n];
+    let flag = '';
+    if (ext && !R.cart) flag = `<span class="flag amb">Needs the changeover cart, checklist and shadow board.</span>`;
+    if (st.checked) {
+      if (ext && !e.ext) flag += `<span class="flag bad">✗ Needs the machine stopped: this cannot be external.</span>`;
+      else if (!ext && e.ext) flag += `<span class="flag amb">Could be done while the machine runs.</span>`;
+      else if (ext && e.reg) flag += `<span class="flag good">✓ External here. In regulated sectors the first part must be approved before production continues.</span>`;
+      else flag += `<span class="flag good">✓</span>`;
+    }
+    const nt = R.newT(e);
+    return `<tr><td>${e.n}</td><td>${e.t}${flag}</td><td class="n">${e.s}</td>
+      <td><div class="seg" role="group" aria-label="Element ${e.n}"><button class="i ${ext ? '' : 'on'}" data-n="${e.n}" data-v="0">Internal</button><button class="e ${ext ? 'on' : ''}" data-n="${e.n}" data-v="1">External</button></div></td>
+      <td class="n ${nt < e.s ? 'good' : ''}">${nt}</td></tr>`;
+  }).join('') + `<tr><td></td><td><b>Total</b></td><td class="n"><b>900</b></td><td></td><td class="n"><b>${R.intNow + R.extNow}</b></td></tr>`;
+  $('elTbl').querySelectorAll('.seg button').forEach(b => b.onclick = () => { st.ext[b.dataset.n] = b.dataset.v === '1'; save(); renderCO(); });
+
+  $('invTbl').innerHTML = INV.map(v => {
+    let saves = 0; for (const k in v.fx) saves += v.fx[k];
+    if (v.id === 'cart') saves = EL.filter(e => st.ext[e.n]).reduce((a, e) => a + R.newT(e), 0);
+    const per = saves ? fmt(v.c / saves, 1) : '–';
+    return `<tr title="${v.tip}" class="${st.inv[v.id] ? 'sel' : ''}"><td><input type="checkbox" data-id="${v.id}" ${st.inv[v.id] ? 'checked' : ''} aria-label="${v.t}"></td><td>${v.t}<span class="flag mute">${v.tip}</span></td><td class="n">£${fmt(v.c)}</td><td class="n">${saves || '–'}</td><td class="n">${per}</td></tr>`;
+  }).join('');
+  $('invTbl').querySelectorAll('input').forEach(c => c.onchange = () => { st.inv[c.dataset.id] = c.checked; save(); renderCO(); });
+
+  $('kInt').textContent = R.intNow + ' s';
+  $('kExt').textContent = R.extNow + ' s';
+  $('kCost').textContent = '£' + fmt(R.cost);
+  const pc = Math.round(R.cut * 100);
+  $('kCut').textContent = pc + '%'; $('kCut2').textContent = pc + '%';
+  $('stageTbl').innerHTML = [['Today', 900], ['After stage 1 (separate)', R.s1], ['After stage 2 (convert)', R.s2], ['After stage 3 (streamline)', R.s3]]
+    .map(([l, v]) => `<tr><td>${l}</td><td class="n">${v} s</td><td class="n mute">${v < 900 ? '−' + Math.round((900 - v) / 9) + '%' : ''}</td></tr>`).join('');
+  $('coCheckMsg').textContent = st.checked ? 'Checks are shown in the element sheet.' : '';
+  drawTL();
+}
+
+function drawTL() {
+  const cv = $('tl'); if (!cv.offsetParent) return;
+  const R = calc(), g = cv.getContext('2d'), W = cv.width, H = cv.height;
+  g.clearRect(0, 0, W, H); g.font = '13px system-ui,sans-serif'; g.textBaseline = 'middle';
+  const x0 = 150, sc = (W - x0 - 30) / 1000;
+  const bar = (y, segs, label) => {
+    g.fillStyle = '#1d2622'; g.textAlign = 'left'; g.fillText(label, 8, y + 18);
+    segs.forEach(s => {
+      g.fillStyle = s.ext ? '#2563eb' : '#ea7a1a'; g.fillRect(x0 + s.x * sc, y, Math.max(1, s.w * sc - 1), 36);
+      if (s.w * sc > 18) { g.fillStyle = '#fff'; g.textAlign = 'center'; g.fillText(s.n, x0 + (s.x + s.w / 2) * sc, y + 18); }
+    });
+  };
+  // before
+  let x = 0; const before = EL.map(e => { const s = {x, w: e.s, n: e.n, ext: false}; x += e.s; return s; });
+  bar(30, before, 'Before: 900 s stopped');
+  // after: external-before | internal | external-after
+  const pre = EL.filter(e => R.isExt(e) && e.n <= 9), post = EL.filter(e => R.isExt(e) && e.n > 9), inn = EL.filter(e => !R.isExt(e));
+  const preW = pre.reduce((a, e) => a + R.newT(e), 0);
+  const segs = []; x = 0;
+  const startPre = Math.max(0, 100 - preW);  // external prep finishes as the machine stops
+  x = startPre; pre.forEach(e => { segs.push({x, w: R.newT(e), n: e.n, ext: true}); x += R.newT(e); });
+  const stop = Math.max(x, 100); x = stop;
+  inn.forEach(e => { const w = R.newT(e); if (w > 0) segs.push({x, w, n: e.n, ext: false}); x += w; });
+  const run = x;
+  post.forEach(e => { segs.push({x, w: R.newT(e), n: e.n, ext: true}); x += R.newT(e); });
+  bar(130, segs, `After: ${R.intNow} s stopped`);
+  g.strokeStyle = '#1d2622'; g.setLineDash([4, 3]); g.lineWidth = 1.5;
+  [[stop, 'machine stops'], [run, 'machine runs']].forEach(([v, l]) => {
+    const px = x0 + v * sc; g.beginPath(); g.moveTo(px, 115); g.lineTo(px, 176); g.stroke();
+    g.fillStyle = '#5d6b64'; g.textAlign = 'center'; g.fillText(l, px, 196);
+  });
+  g.setLineDash([]);
+}
+$('coCheck').onclick = () => { st.checked = !st.checked; $('coCheck').textContent = st.checked ? 'Hide the check' : 'Check my classification'; save(); renderCO(); };
+$('coReset').onclick = () => { st.ext = {}; st.inv = {}; st.checked = false; $('coCheck').textContent = 'Check my classification'; save(); renderCO(); };
+$('coApply').onclick = () => { const p = Math.round(calc().cut * 100); setSmed(p); $('coSaved').textContent = `${p}% applied to tabs 3–5.`; };
+$('coSave').onclick = () => {
+  const R = calc(); const ext = EL.filter(e => st.ext[e.n]).map(e => e.n).join(' '), inv = INV.filter(v => st.inv[v.id]).map(v => v.t).join('; ');
+  addLog('Changeover design', `External: ${ext || 'none'} | Bought: ${inv || 'nothing'}`, `Internal ${R.intNow} s (−${Math.round(R.cut * 100)}%), external ${R.extNow} s, cost £${fmt(R.cost)}`);
+  $('coSaved').textContent = 'Saved to the log.';
+};
+window.addEventListener('resize', drawTL);
+
+function setSmed(p) {
+  st.smed = p; save();
+  ['capSmed', 'tSmed', 'eSmed'].forEach(id => $(id).value = p);
+  if (!$('capOut').classList.contains('hidden')) renderCap();
+  if (!$('eOut').classList.contains('hidden')) renderEOQ();
+}
+
+// ---------------- capacity check ----------------
+function renderCap() {
+  const s = Math.min(95, Math.max(0, +$('capSmed').value || 0)) / 100, r2 = $('capR2').checked;
+  const D = r2 ? 86.25 : 75, f = D / 75;
+  const brk = r2 ? 5348 : 0;   // expected winder breakdown time per day in Round 2 (about 2.2 × 40 min)
+  const sw = Math.max(0, 54000 - D * 558 - brk), sk = 54000 - D * 218;
+  document.querySelectorAll('.nN').forEach(n => n.textContent = fmt(MIXN[n.dataset.k] * f, r2 ? 1 : 0));
+  const cell = (need, spare) => `<td><span class="${need <= spare ? 'good' : 'bad'}">${fmt(need)} s ${need <= spare ? '✓' : '✗'}</span></td>`;
+  $('capTbl').innerHTML =
+    `<tr><td>Winder (480 s per switch)</td><td class="n">${fmt(sw)}</td>${[1, 5, 15].map(k => cell(MIXN[k] * f * 480 * (1 - s), sw)).join('')}</tr>` +
+    `<tr><td>Worker (2,700 s per switch)</td><td class="n">${fmt(sk)}</td>${[1, 5, 15].map(k => cell(MIXN[k] * f * 2700 * (1 - s), sk)).join('')}</tr>`;
+  const need = (spare, S, N) => Math.max(0, 1 - spare / (N * S));
+  $('capMin').innerHTML = [1, 5, 15].map(k => {
+    const N = MIXN[k] * f, a = need(sw, 480, N), b = need(sk, 2700, N);
+    const lim = Math.max(a, b) === 0 ? 'neither: fits today' : (b >= a ? 'the worker' : 'the winder');
+    const okc = s >= Math.max(a, b) - 1e-9;
+    return `<tr class="${okc ? '' : 'hit'}"><td>${MIXNAME[k]}</td><td class="n">${(a * 100).toFixed(1)}%</td><td class="n">${(b * 100).toFixed(1)}%</td><td>${lim}</td><td><span class="${okc ? 'good' : 'bad'}">${okc ? '✓ enough' : '✗ not enough'}</span></td></tr>`;
+  }).join('');
+  $('capYourH').textContent = `Your cut (${Math.round(s * 100)}%)`;
+  $('capNote').textContent = r2 ? 'Round 2: demand 86.25 a day; winder spare time also allows for about 2.2 breakdowns a day of 40 minutes (5,348 s). A paper check is necessary but not sufficient: test it in tab 4.'
+    : 'Spare time: winder 54,000 − 75 × 558; worker 54,000 − 75 × 218. A paper check is necessary but not sufficient: while one worker changes over the CNC machines, the winder may wait. Test it in tab 4.';
+}
+$('capShow').onclick = () => { const h = $('capOut').classList.toggle('hidden'); $('capShow').textContent = h ? 'Show the check' : 'Hide the check'; $('capShow').classList.toggle('on', !h); renderCap(); };
+['input', 'change', 'keyup'].forEach(ev => {
+  $('capSmed').addEventListener(ev, () => { const v = +$('capSmed').value; if ($('capSmed').value !== '' && v >= 0 && v <= 95) { st.smed = v; save(); ['tSmed', 'eSmed'].forEach(id => $(id).value = v); } renderCap(); });
+  $('capR2').addEventListener(ev, renderCap);
+});
+
+// ---------------- batch test (uses the workcell engine) ----------------
+const hist = [];
+$('tRun').onclick = () => {
+  const btn = $('tRun'); btn.disabled = true; btn.textContent = 'Running…';
+  setTimeout(() => {
+    const k = +$('tMix').value, s = Math.min(95, Math.max(0, +$('tSmed').value || 0)), rel = $('tRel').value;
+    const r2 = $('tR2').checked, w2 = $('tW2').checked;
+    const design = {mac: {n: 1, scheme: 'sub', assign: Array(6).fill(0), buf: 1, secondWinder: w2, smed: s / 100}};
+    const extra = r2 ? {demandUp: true, cv: 0.15, breakdown: true} : {};
+    const o = Object.assign({mode: 'mac', k, release: rel, coMode: 'seq', designs: design}, extra);
+    const r = new Sim(o).runAll();
+    const c = new Sim(Object.assign({}, o, {capTest: true})).runAll().cells.mac;
+    const takt = r.takt, ok = c.ct <= takt && r.outDay >= 0.98 * r.perDay;
+    const wip = r.outDay / 900 * r.leadMean;
+    $('rTakt').textContent = Math.round(takt);
+    $('rCT').innerHTML = `<i class="${c.ct <= takt ? 'good' : 'bad'}">${fmt(c.ct)}</i>`;
+    $('rOut').textContent = fmt(r.outDay, 1);
+    $('rLead').textContent = ok ? fmt(r.leadMean) : 'grows';
+    $('rWip').textContent = ok ? fmt(wip, 1) : '–';
+    $('rCo').textContent = fmt(r.cells.mac.coTime / 60 / DAYS);
+    $('rQ').textContent = fmt(r.queue);
+    $('tHead').textContent = `Results: ${MIXNAME[k]}, SMED ${s}%, ${rel === 'batch' ? 'whole batch' : 'one every takt'}${r2 ? ', Round 2' : ''}${w2 ? ', second winder' : ''}`;
+    $('rVerdict').innerHTML = ok ? `<span class="pill g">Meets demand</span> The cell keeps up with ${fmt(r.perDay, 1)} fans a day.`
+      : `<span class="pill r">Misses demand</span> The cell cannot keep up with ${fmt(r.perDay, 1)} fans a day: orders pile up, so lead time keeps growing.`;
+    hist.unshift([MIXNAME[k], s + '%', rel === 'batch' ? 'whole batch' : 'every takt', fmt(c.ct), fmt(r.outDay, 1), ok ? fmt(r.leadMean) : 'grows', ok ? fmt(wip, 1) : '–', (r2 ? 'R2 ' : '') + (w2 ? '2W' : '')]);
+    $('tHist').innerHTML = hist.slice(0, 12).map(h => `<tr><td>${h[0]}${h[7] ? ' <span class="pill a">' + h[7].trim() + '</span>' : ''}</td><td class="n">${h[1]}</td><td>${h[2]}</td><td class="n">${h[3]}</td><td class="n">${h[4]}</td><td class="n">${h[5]}</td><td class="n">${h[6]}</td></tr>`).join('');
+    addLog('Batch test', `${MIXNAME[k]}; SMED ${s}%; release ${rel === 'batch' ? 'whole batch' : 'one every takt'}${r2 ? '; Round 2' : ''}${w2 ? '; second winder' : ''}`,
+      `CT ${fmt(c.ct)} s; ${fmt(r.outDay, 1)} fans/day; lead ${ok ? fmt(r.leadMean) + ' min' : 'grows'}; WIP ${ok ? fmt(wip, 1) : '–'}; changeover ${fmt(r.cells.mac.coTime / 60 / DAYS)} min/day`);
+    btn.disabled = false; btn.textContent = 'Run 10 days';
+  }, 30);
+};
+
+// ---------------- EOQ ----------------
+function eoqVals(smed) {
+  const D = +$('eD').value, co = +$('eCo').value, rate = +$('eRate').value, H = +$('eH').value, p = +$('eP').value, d = +$('eDd').value;
+  const S = co * (1 - smed) / 3600 * rate, f = 1 - d / p;
+  const eoq = Math.sqrt(2 * D * S / H), emq = f > 0 ? Math.sqrt(2 * D * S / (H * f)) : NaN;
+  const tc = Q => D / Q * S + Q / 2 * H;
+  return {D, S, H, d, eoq, emq, tc, f};
+}
+function renderEOQ() {
+  const s = Math.min(95, Math.max(0, +$('eSmed').value || 0)) / 100;
+  const A = eoqVals(0), B = eoqVals(s);
+  $('eAfterH').textContent = `After SMED (${Math.round(s * 100)}%)`;
+  const days = (q, v) => `${fmt(q)} <span class="mute">(≈ ${fmt(q / v.d, 1)} days)</span>`;
+  $('eTbl').innerHTML = [
+    ['Cost per changeover S', '£' + fmt(A.S, 2), '£' + fmt(B.S, 2)],
+    ['EOQ', days(A.eoq, A), days(B.eoq, B)],
+    ['EMQ', days(A.emq, A), days(B.emq, B)],
+    ['Annual cost at Q = 30', '£' + fmt(A.tc(30)), '£' + fmt(B.tc(30))],
+    ['Annual cost at the EOQ', '£' + fmt(A.tc(A.eoq)), '£' + fmt(B.tc(B.eoq))],
+    ['Extra cost of daily batches', '£' + fmt(A.tc(30) - A.tc(A.eoq)), '£' + fmt(B.tc(30) - B.tc(B.eoq))]]
+    .map(r => `<tr><td>${r[0]}</td><td class="n">${r[1]}</td><td class="n">${r[2]}</td></tr>`).join('');
+  // chart
+  const cv = $('eCv'); if (!cv.offsetParent) return;
+  const g = cv.getContext('2d'), W = cv.width, H = cv.height, L = 62, Rr = 14, T = 14, Bt = 40;
+  g.clearRect(0, 0, W, H); g.font = '12px system-ui,sans-serif';
+  const qMax = 500, yMax = Math.max(10000, Math.ceil(A.tc(30) / 5000) * 5000);
+  const X = q => L + (q / qMax) * (W - L - Rr), Y = v => T + (1 - Math.min(v, yMax) / yMax) * (H - T - Bt);
+  g.strokeStyle = '#dfe3df'; g.fillStyle = '#5d6b64'; g.lineWidth = 1; g.textAlign = 'right'; g.textBaseline = 'middle';
+  for (let v = 0; v <= yMax; v += yMax / 5) { g.beginPath(); g.moveTo(L, Y(v)); g.lineTo(W - Rr, Y(v)); g.stroke(); g.fillText('£' + fmt(v / 1000, 0) + 'k', L - 6, Y(v)); }
+  g.textAlign = 'center'; g.textBaseline = 'top';
+  for (let q = 0; q <= qMax; q += 100) g.fillText(q, X(q), H - Bt + 6);
+  g.fillText('batch size Q (Tower housings)', (L + W - Rr) / 2, H - 16);
+  const curve = (v, col) => { g.strokeStyle = col; g.lineWidth = 2.5; g.beginPath(); for (let q = 8; q <= qMax; q += 2) { const px = X(q), py = Y(v.tc(q)); q === 8 ? g.moveTo(px, py) : g.lineTo(px, py); } g.stroke();
+    g.fillStyle = col; g.beginPath(); g.arc(X(v.eoq), Y(v.tc(v.eoq)), 5, 0, 7); g.fill(); };
+  curve(A, '#7a8a83'); curve(B, '#1f6f5c');
+  g.strokeStyle = '#ea7a1a'; g.setLineDash([5, 4]); g.lineWidth = 1.5; g.beginPath(); g.moveTo(X(30), T); g.lineTo(X(30), H - Bt); g.stroke(); g.setLineDash([]);
+}
+$('eShow').onclick = () => { const h = $('eOut').classList.toggle('hidden'); $('eShow').textContent = h ? 'Show the check' : 'Hide the check'; $('eShow').classList.toggle('on', !h); renderEOQ(); };
+['eSmed', 'eD', 'eCo', 'eRate', 'eH', 'eP', 'eDd'].forEach(id => ['input', 'change', 'keyup'].forEach(ev => $(id).addEventListener(ev, () => { if (!$('eOut').classList.contains('hidden')) renderEOQ(); })));
+
+// ---------------- log ----------------
+function addLog(type, settings, results) {
+  LOG.unshift({time: new Date().toLocaleString('en-GB'), type, settings, results});
+  store.set('log', LOG); renderLog();
+}
+function renderLog() {
+  $('lTbl').innerHTML = LOG.length ? LOG.map(l => `<tr><td>${l.time}</td><td>${l.type}</td><td>${l.settings}</td><td>${l.results}</td></tr>`).join('') : '<tr><td colspan="4" class="mute">Nothing logged yet.</td></tr>';
+}
+$('lDl').onclick = () => {
+  const q = s => '"' + String(s).replace(/"/g, '""') + '"';
+  const csv = ['Time,Type,Settings,Results', ...LOG.slice().reverse().map(l => [l.time, l.type, l.settings, l.results].map(q).join(','))].join('\r\n');
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['﻿' + csv], {type: 'text/csv'}));
+  a.download = 'smed_workshop_log.csv'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+};
+$('lClr').onclick = () => { if (LOG.length) { LOG = []; store.set('log', LOG); renderLog(); } };
+
+// ---------------- start ----------------
+if (st.checked) $('coCheck').textContent = 'Hide the check';
+['capSmed', 'tSmed', 'eSmed'].forEach(id => $(id).value = st.smed || 0);
+renderCO(); renderLog();
+</script>
+</body>
+</html>
